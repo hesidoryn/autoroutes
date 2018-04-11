@@ -1,0 +1,25 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "YlSbD5MK07ZDkvLQJquJjw2m9Ko=",
+			"path": "github.com/gojuno/go.osrm",
+			"revision": "c8ff29c89053035b8427cd3189f55c9a9b4b3bba",
+			"revisionTime": "2018-03-22T12:21:50Z"
+		},
+		{
+			"checksumSHA1": "fRem2ZfpEoQKvUUiDCAjkDQiGC0=",
+			"path": "github.com/paulmach/go.geo",
+			"revision": "a3947523092bdabf278b66fffff1a997b14efba7",
+			"revisionTime": "2018-04-03T17:23:44Z"
+		},
+		{
+			"checksumSHA1": "XA2XZQG9vKT4KPlIIj68InpTe7I=",
+			"path": "github.com/paulmach/go.geojson",
+			"revision": "009733452f4eb8d86c5165a3dcc816c32ed1486d",
+			"revisionTime": "2018-02-11T00:35:13Z"
+		}
+	],
+	"rootPath": "github.com/hesidoryn/autoroutes"
+}
