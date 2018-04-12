@@ -7,7 +7,9 @@ import (
 	"github.com/hesidoryn/autoroutes/minsktrans"
 	"github.com/hesidoryn/autoroutes/nominatim"
 	"github.com/hesidoryn/autoroutes/router"
+	"github.com/hesidoryn/autoroutes/tracer"
 	geo "github.com/paulmach/go.geo"
+	"github.com/paulmach/osm"
 )
 
 func main() {
@@ -35,17 +37,40 @@ func main() {
 		}
 		query := fmt.Sprintf("%v %v, %v", stop.Latitude, stop.Longitude, stop.Name)
 		address, _ = geocoder.Search(query)
+		stops107 = append(stops107, address)
 	}
 
 	router := router.New()
-	points := geo.PointSet{
-		{stops107[0].Lon, stops107[0].Lat},
-		{stops107[1].Lon, stops107[1].Lat},
+	tracer := tracer.New()
+	ways107 := []*osm.Way{}
+	for i := 0; i < len(stops107)-1; i++ {
+		points := geo.PointSet{
+			{stops107[i].Lon, stops107[i].Lat},
+			{stops107[i+1].Lon, stops107[i+1].Lat},
+		}
+		fmt.Println(points)
+		route, err := router.Route(points)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		keyNodeIDs := route.Routes[0].Legs[0].Annotation.Nodes
+		for i := 0; i < len(keyNodeIDs)-1; i++ {
+			way, err := tracer.Trace(keyNodeIDs[i], keyNodeIDs[i+1])
+			if err != nil {
+				log.Fatal(err)
+			}
+			if way == nil {
+				continue
+			}
+			ways107 = append(ways107, way)
+		}
 	}
-	fmt.Println(points)
-	route, err := router.Route(points)
-	fmt.Println(err)
-	fmt.Println(route.Routes[0].Legs[0].Annotation.Nodes)
+	fmt.Println("---------------------------")
+	for _, way := range removeDuplicates(ways107) {
+		fmt.Println(way.ID)
+	}
+
 	// geocoder := nominatim.New()
 	//
 	// routes := mt.GetRoutes()
