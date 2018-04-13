@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/hesidoryn/autoroutes/minsktrans"
 	"github.com/hesidoryn/autoroutes/nominatim"
@@ -10,6 +12,7 @@ import (
 	"github.com/hesidoryn/autoroutes/tracer"
 	geo "github.com/paulmach/go.geo"
 	"github.com/paulmach/osm"
+	"github.com/paulmach/osm/osmapi"
 )
 
 func main() {
@@ -24,12 +27,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	relation107 := &osm.Relation{}
+
 	geocoder := nominatim.New()
 	route107 := mt.GetRoute("208392")
 	stops107 := []*nominatim.Address{}
 	for _, id := range route107.Stops {
 		stop := mt.GetStop(id)
-		address, _ := geocoder.ReverseGeocode(stop.Latitude, stop.Longitude)
+		address, err := geocoder.ReverseGeocode(stop.Latitude, stop.Longitude)
+		if err != nil {
+			log.Fatal(err)
+		}
 		if address.Type == "bus_stop" ||
 			address.Type == "bus_station" {
 			stops107 = append(stops107, address)
@@ -40,6 +48,36 @@ func main() {
 		stops107 = append(stops107, address)
 	}
 
+	for i, stop := range stops107 {
+		member := osm.Member{
+			Type: osm.TypeNode,
+			Ref:  stop.ID,
+		}
+		ctx := context.Background()
+		node, err := osmapi.Node(ctx, osm.NodeID(stop.ID))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		pt := node.Tags.Find("public_transport")
+		if pt == "stop_position" || pt == "" {
+			member.Role = "stop"
+		}
+		if pt == "platform" {
+			member.Role = "platform"
+		}
+		if i == 0 || i == 1 {
+			member.Role += "_entry_only"
+		}
+		if i == len(stops107)-1 || i == len(stops107)-2 {
+			member.Role += "_exit_only"
+		}
+
+		relation107.Members = append(relation107.Members, member)
+	}
+
+	fmt.Println(relation107.Members)
+	os.Exit(0)
 	router := router.New()
 	tracer := tracer.New()
 	ways107 := []*osm.Way{}

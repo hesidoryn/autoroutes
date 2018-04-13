@@ -19,6 +19,7 @@ type Address struct {
 	PlaceID     string `json:"place_id"`
 	OsmType     string `json:"osm_type"`
 	OsmID       string `json:"osm_id"`
+	ID          int64
 	Latitude    string `json:"lat"`
 	Lat         float64
 	Longitude   string `json:"lon"`
@@ -75,6 +76,11 @@ func (g *Geocoder) ReverseGeocode(lat, lon float64) (*Address, error) {
 		return nil, err
 	}
 
+	address.ID, err = strconv.ParseInt(address.OsmID, 10, 64)
+	fmt.Println(address.ID)
+	if err != nil {
+		return nil, err
+	}
 	address.Lat, err = strconv.ParseFloat(address.Latitude, 64)
 	if err != nil {
 		return nil, err
@@ -114,6 +120,10 @@ func (g *Geocoder) Search(query string) (*Address, error) {
 	}
 
 	address := addresses[0]
+	address.ID, err = strconv.ParseInt(address.OsmID, 10, 64)
+	if err != nil {
+		return nil, err
+	}
 	address.Lat, err = strconv.ParseFloat(address.Latitude, 64)
 	if err != nil {
 		return nil, err
