@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/hesidoryn/autoroutes/minsktrans"
 	"github.com/hesidoryn/autoroutes/nominatim"
@@ -52,32 +51,17 @@ func main() {
 		member := osm.Member{
 			Type: osm.TypeNode,
 			Ref:  stop.ID,
+			Role: "platform",
 		}
-		ctx := context.Background()
-		node, err := osmapi.Node(ctx, osm.NodeID(stop.ID))
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		pt := node.Tags.Find("public_transport")
-		if pt == "stop_position" || pt == "" {
-			member.Role = "stop"
-		}
-		if pt == "platform" {
-			member.Role = "platform"
-		}
-		if i == 0 || i == 1 {
+		if i == 0 {
 			member.Role += "_entry_only"
 		}
-		if i == len(stops107)-1 || i == len(stops107)-2 {
+		if i == 0 {
 			member.Role += "_exit_only"
 		}
-
 		relation107.Members = append(relation107.Members, member)
 	}
 
-	fmt.Println(relation107.Members)
-	os.Exit(0)
 	router := router.New()
 	tracer := tracer.New()
 	ways107 := []*osm.Way{}
@@ -103,6 +87,30 @@ func main() {
 			}
 			ways107 = append(ways107, way)
 		}
+		last := osm.NodeID(keyNodeIDs[len(keyNodeIDs)-3])
+		lastNode, err := osmapi.Node(context.Background(), last)
+		if err != nil {
+			log.Fatalf("Check last node err: %v", err)
+		}
+		if lastNode.Tags.Find("public_transport") != "" {
+			fmt.Println(lastNode.Tags.Find("public_transport"))
+			continue
+		}
+		last = osm.NodeID(keyNodeIDs[len(keyNodeIDs)-2])
+		lastNode, err = osmapi.Node(context.Background(), last)
+		if err != nil {
+			log.Fatalf("Check last node err: %v", err)
+		}
+		if lastNode.Tags.Find("public_transport") != "" {
+			fmt.Println(lastNode.Tags.Find("public_transport"))
+			continue
+		}
+		last = osm.NodeID(keyNodeIDs[len(keyNodeIDs)-1])
+		lastNode, err = osmapi.Node(context.Background(), last)
+		if err != nil {
+			log.Fatalf("Check last node err: %v", err)
+		}
+		fmt.Println(lastNode.Tags.Find("public_transport"))
 	}
 	fmt.Println("---------------------------")
 	for _, way := range removeDuplicates(ways107) {
